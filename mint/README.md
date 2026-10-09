@@ -1,6 +1,6 @@
-# Squeegee Paint Smear — mint page
+# Squeegee — mint page
 
-A mint site for the ABX edition of *Squeegee Paint Smear*. Built on the scaffold
+A mint site for the ABX edition of *Squeegee*. Built on the scaffold
 from `abx mint-page`, restyled for the piece, and set up as a **static site**:
 `npm run build` writes plain files to `out/` that run anywhere. There is no
 backend. Sale state is read straight from the chain, and visitors mint with

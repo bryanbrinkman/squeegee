@@ -1,5 +1,5 @@
 // Words on the page. Edit freely.
-export const TITLE = 'Squeegee Paint Smear';
+export const TITLE = 'Squeegee';
 export const ARTIST = 'Bryan Brinkman';
 export const ARTIST_URL = 'https://bryanbrinkman.com';
 export const EDITION_SIZE = 100; // shown until the contract's own cap loads
