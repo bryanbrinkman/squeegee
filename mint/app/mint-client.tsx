@@ -1,10 +1,10 @@
 'use client';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState, type FormEvent} from 'react';
 import {createWalletClient, custom, formatEther} from 'viem';
 import {readSaleConfig1155, type SaleConfig1155} from '@artblocks/abx-sdk';
 import {chain} from '../lib/chain';
 import {CHAIN_ID, CHAIN_NAME, EXPLORER, HAS_TOKEN, MINTER, TOKEN, TOKEN_ID} from '../lib/config';
-import {ARTIST, ARTIST_URL, DESCRIPTION, DETAILS, EDITION_SIZE, TITLE} from '../lib/content';
+import {ARTIST, ARTIST_URL, DESCRIPTION, DETAILS, EDITION_SIZE, MINT_CODE, TITLE} from '../lib/content';
 import {minterAbi, tokenAbi} from '../lib/abi';
 import {publicClient, readArtwork, type Live} from '../lib/meta';
 import {getEthereum, isMobile, switchChain, walletLinks} from '../lib/wallet';
@@ -13,6 +13,7 @@ import Artwork from './artwork';
 const ZERO = '0x0000000000000000000000000000000000000000';
 const PAINT = ['#f2668b', '#23c7d9', '#48d9a4', '#f2bf27', '#26262b', '#8a8f98'];
 const ID = BigInt(TOKEN_ID);
+const CODE_KEY = 'mint-code-ok';
 
 type Status = {tone: 'info' | 'ok' | 'error'; text: string; tx?: string} | null;
 
@@ -55,6 +56,8 @@ export default function Mint() {
   const [status, setStatus] = useState<Status>(null);
   const [hasWallet, setHasWallet] = useState(true);
   const [mobile, setMobile] = useState(false);
+  const [unlocked, setUnlocked] = useState(!MINT_CODE);
+  const [codeInput, setCodeInput] = useState('');
   const accountRef = useRef('');
   accountRef.current = account;
 
@@ -120,6 +123,26 @@ export default function Mint() {
     const t = setTimeout(() => setArtMode((m) => (m === 'wait' ? 'preview' : m)), 12000);
     return () => clearTimeout(t);
   }, []);
+
+  // Remember a correct code for this tab, so a reload doesn't ask again.
+  useEffect(() => {
+    try {
+      if (MINT_CODE && sessionStorage.getItem(CODE_KEY) === MINT_CODE) setUnlocked(true);
+    } catch {}
+  }, []);
+
+  function submitCode(e: FormEvent) {
+    e.preventDefault();
+    if (codeInput.trim() === MINT_CODE) {
+      setUnlocked(true);
+      setStatus(null);
+      try {
+        sessionStorage.setItem(CODE_KEY, MINT_CODE);
+      } catch {}
+    } else {
+      setStatus({tone: 'error', text: 'That code isn’t right.'});
+    }
+  }
 
   // Wallet: pick up an existing connection and follow account/network changes.
   useEffect(() => {
@@ -248,8 +271,10 @@ export default function Mint() {
   else if (busy === 'pending') action = {label: 'Minting…', disabled: true};
   else action = {label: 'Mint ' + copies(q) + ' for ' + eth(totalPrice), onClick: mint};
 
-  const showOpenIn = !hasWallet && mobile && onSale && !soldOut && !paused;
-  const showQty = onSale && !soldOut && !paused && !showOpenIn;
+  // While the sale is open, the code comes first; no wallet or mint button until it's entered.
+  const showCode = onSale && !soldOut && !paused && !unlocked;
+  const showOpenIn = !hasWallet && mobile && onSale && !soldOut && !paused && !showCode;
+  const showQty = onSale && !soldOut && !paused && !showOpenIn && !showCode;
 
   return (
     <main className="page">
@@ -299,7 +324,22 @@ export default function Mint() {
             </div>
           ) : null}
 
-          {showOpenIn ? (
+          {showCode ? (
+            <form className="code" onSubmit={submitCode}>
+              <label htmlFor="mint-code">Enter the code to mint</label>
+              <input
+                id="mint-code"
+                value={codeInput}
+                onChange={(e) => setCodeInput(e.target.value)}
+                inputMode="numeric"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <button type="submit" className="blade" disabled={!codeInput.trim()}>
+                Unlock
+              </button>
+            </form>
+          ) : showOpenIn ? (
             <div className="openin">
               {walletLinks().map((l) => (
                 <a key={l.href} className="blade ghost" href={l.href}>
