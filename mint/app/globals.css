@@ -1,0 +1,140 @@
+/* Squeegee Paint Smear — mint page.
+   The page is the wall the piece hangs on (#d8d6c8, the artwork's own
+   background), so the live canvas sits in it without a seam. The paint
+   colours appear only where copies are counted. The mint button is the
+   squeegee's black rubber blade. */
+:root {
+  --wall: #d8d6c8;
+  --ink: #26262b;
+  --ink-soft: #3d3c3a;
+  --muted: #66645b;
+  --rule: rgba(38, 38, 43, 0.16);
+  --empty: rgba(38, 38, 43, 0.11);
+  --paper: #f3f1e8;
+  --pink: #f2668b;
+  --cyan: #23c7d9;
+  --green: #2f9e77;
+  --error: #b3263f;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--wall); }
+body {
+  font-family: var(--font-archivo), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- layout ---------- */
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: auto minmax(300px, 420px);
+  justify-content: center;
+  align-items: center;
+  gap: clamp(32px, 5vw, 80px);
+  padding: 4vh 5vw;
+}
+.stage { display: flex; flex-direction: column; align-items: center; }
+.art {
+  height: min(88vh, 1400px);
+  height: min(88dvh, 1400px);
+  aspect-ratio: 9 / 16;
+}
+.art iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--wall); }
+.hint { margin: 10px 0 0; font-size: 0.8125rem; color: var(--muted); text-align: center; }
+
+/* ---------- words ---------- */
+h1 {
+  margin: 0;
+  font-weight: 800;
+  font-variation-settings: 'wdth' 125;
+  font-size: clamp(2.25rem, 1.3rem + 2.4vw, 3.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.015em;
+}
+.artist { margin: 12px 0 0; font-size: 1.125rem; font-weight: 500; }
+.artist a { text-decoration: none; }
+.artist a:hover { text-decoration: underline; }
+.about { margin-top: 24px; max-width: 34em; color: var(--ink-soft); }
+.about p { margin: 0 0 0.75em; }
+
+/* ---------- edition count ---------- */
+.edition { margin-top: 28px; }
+.ticks { display: grid; grid-template-columns: repeat(25, 1fr); gap: 4px; }
+.ticks span { height: 9px; border-radius: 999px; background: var(--empty); }
+.count {
+  display: flex; justify-content: space-between; gap: 12px;
+  margin: 10px 0 0; font-size: 0.9375rem; font-variant-numeric: tabular-nums;
+}
+.count strong { font-weight: 700; }
+.count .left { color: var(--muted); }
+
+/* ---------- buy ---------- */
+.buy { margin-top: 28px; display: grid; gap: 14px; }
+.price {
+  margin: 0; font-size: 1.625rem; font-weight: 700;
+  font-variation-settings: 'wdth' 110; font-variant-numeric: tabular-nums;
+}
+.price span { font-size: 1rem; font-weight: 400; font-variation-settings: normal; color: var(--muted); }
+
+.qty {
+  display: inline-flex; align-items: center; justify-self: start;
+  border: 1.5px solid var(--ink); border-radius: 6px;
+}
+.qty button {
+  width: 44px; height: 44px; border: 0; background: transparent; color: var(--ink);
+  font: inherit; font-size: 1.25rem; cursor: pointer;
+}
+.qty button:disabled { color: rgba(38, 38, 43, 0.3); cursor: default; }
+.qty output { min-width: 3ch; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.blade {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; min-height: 56px; padding: 12px 20px;
+  border: 0; border-radius: 6px;
+  background: var(--ink); color: var(--paper);
+  font: inherit; font-size: 1.0625rem; font-weight: 700; text-align: center; text-decoration: none;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.35);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.blade:hover:not(:disabled) { transform: translateY(-1px); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.35), 0 6px 16px rgba(38, 38, 43, 0.18); }
+.blade:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35); }
+.blade:disabled { background: var(--empty); color: var(--muted); box-shadow: none; cursor: default; }
+.blade.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); box-shadow: none; }
+.openin { display: grid; gap: 10px; }
+
+.status { margin: 0; font-size: 0.9375rem; }
+.status.ok { color: var(--green); font-weight: 600; }
+.status.error { color: var(--error); }
+.wallet { margin: 0; font-size: 0.875rem; color: var(--muted); }
+
+/* ---------- details ---------- */
+.details {
+  margin: 32px 0 0; padding-top: 16px; border-top: 1px solid var(--rule);
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 24px;
+  font-size: 0.875rem;
+}
+.details div { min-width: 0; }
+.details dt { color: var(--muted); }
+.details dd { margin: 0; overflow-wrap: anywhere; }
+
+/* ---------- small screens: artwork first, full width ---------- */
+@media (max-width: 860px) {
+  .page { grid-template-columns: 1fr; gap: 28px; padding: 16px 20px 48px; align-items: start; }
+  /* leave the title peeking below the fold so visitors know to scroll */
+  .art { height: min(72vh, calc((100vw - 40px) * 16 / 9)); height: min(72svh, calc((100vw - 40px) * 16 / 9)); width: auto; }
+  .stage { width: 100%; }
+  .panel { max-width: 520px; width: 100%; justify-self: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blade { transition: none; }
+}
