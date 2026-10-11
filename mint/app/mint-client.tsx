@@ -280,7 +280,7 @@ export default function Mint() {
     <main className="page">
       <section className="stage">
         <Artwork mode={artMode} live={live} />
-        <p className="hint">Tap for a new painting. Double-tap to use the squeegee.</p>
+        <p className="hint">Tap for a new painting. Double-tap to open the customize menu.</p>
       </section>
 
       <section className="panel">

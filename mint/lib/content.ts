@@ -9,8 +9,7 @@ export const EDITION_SIZE = 100; // shown until the contract's own cap loads
 export const MINT_CODE = '79843';
 
 export const DESCRIPTION = [
-  'Dots and piped lines of paint land on paper, then a squeegee drags through them and smears everything it meets.',
-  'Every copy holds the same painting, set by the seed drawn at the first mint. Leave it running and it keeps making new ones.',
+  'Squeegee by Bryan Brinkman. Created with ABX for Marfa 2026. Dots and piped lines of paint are randomly drawn, then a squeegee drags through them and smears everything it meets. Leave it running and it keeps making new ones, or double click/tap to open the customize menu and draw and spread your own work.',
 ];
 
 // Credits under the purchase panel.
