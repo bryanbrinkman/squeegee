@@ -148,3 +148,9 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   .blade { transition: none; }
 }
+
+/* /admin — owner sale switch */
+.page.admin { grid-template-columns: minmax(0, 32rem); justify-content: center; }
+.switch { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; }
+.switch.on { color: var(--green); }
+.switch.off { color: var(--muted); }
