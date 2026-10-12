@@ -1,5 +1,5 @@
 'use client';
-import {useCallback, useEffect, useMemo, useRef, useState, type FormEvent} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent} from 'react';
 import {createWalletClient, custom, formatEther} from 'viem';
 import {readSaleConfig1155, type SaleConfig1155} from '@artblocks/abx-sdk';
 import {chain} from '../lib/chain';
@@ -47,11 +47,13 @@ function copies(n: number): string {
   return n === 1 ? '1 copy' : n + ' copies';
 }
 
-// One mark per copy in the edition, filled in paint colours as copies are minted.
+// One paint drop per copy in the edition, filled in as copies are minted.
 function Ticks({minted, total}: {minted: number; total: number}) {
   const marks = [];
   for (let i = 0; i < total; i++) {
-    marks.push(<span key={i} style={i < minted ? {background: PAINT[(i * 7) % PAINT.length]} : undefined} />);
+    marks.push(
+      <span key={i} className={i < minted ? 'on' : undefined} style={i < minted ? ({'--c': PAINT[(i * 7) % PAINT.length]} as CSSProperties) : undefined} />,
+    );
   }
   return (
     <div className="ticks" role="img" aria-label={minted + ' of ' + total + ' minted'}>
@@ -326,7 +328,14 @@ export default function Mint() {
       </section>
 
       <section className="panel">
-        <h1>{TITLE}</h1>
+        <h1 className="title">{TITLE}</h1>
+        <div className="smear" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+        </div>
         <p className="artist">
           <a href={ARTIST_URL}>{ARTIST}</a>
         </p>

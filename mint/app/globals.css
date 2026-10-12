@@ -14,11 +14,23 @@
   --pink: #f2668b;
   --cyan: #23c7d9;
   --green: #2f9e77;
+  --paint-pink: #f2668b;
+  --paint-cyan: #23c7d9;
+  --paint-green: #48d9a4;
+  --paint-yellow: #f2bf27;
   --error: #b3263f;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--wall); }
+html { background: var(--wall); }
+html, body { margin: 0; }
+body { background: transparent; }
+/* a little paper tooth on the wall, under everything (the artwork sits above it) */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: 0.5; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.15 0 0 0 0 0.14 0 0 0 0 0.1 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 body {
   font-family: var(--font-archivo), 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: var(--ink);
@@ -48,7 +60,9 @@ a:hover { text-decoration-thickness: 2px; }
   aspect-ratio: 9 / 16;
 }
 .art iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--wall); }
-.hint { margin: 10px 0 0; font-size: 0.8125rem; color: var(--muted); text-align: center; }
+/* the piece hangs a few millimetres off the wall */
+.art { box-shadow: 0 18px 34px -8px rgba(38, 38, 43, 0.22), 0 2px 5px rgba(38, 38, 43, 0.08); }
+.hint { margin: 14px 0 0; font-size: 0.8125rem; font-style: italic; color: var(--muted); text-align: center; }
 
 /* ---------- words ---------- */
 h1 {
@@ -59,7 +73,38 @@ h1 {
   line-height: 0.95;
   letter-spacing: -0.015em;
 }
-.artist { margin: 12px 0 0; font-size: 1.125rem; font-weight: 500; }
+h1.title {
+  font-weight: 900;
+  font-size: clamp(3rem, 1.6rem + 3.6vw, 4.75rem);
+  line-height: 0.85;
+  letter-spacing: -0.035em;
+}
+
+/* the title's paint smear: five bands of the piece's paints, pulled in once
+   like the squeegee crossing them. Striations and a dry, ragged tail. */
+.smear { display: grid; width: min(100%, 340px); margin: 14px 0 0; }
+.smear i {
+  display: block; height: 6px; width: var(--w); margin-left: var(--x, 0); margin-top: -2px;
+  border-radius: 4px 2px 2px 4px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0 18%, transparent 18% 62%, rgba(255, 255, 255, 0.14) 62% 70%, transparent 70%),
+    linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.14)),
+    var(--c);
+  -webkit-mask-image: linear-gradient(90deg, #000 0 64%, rgba(0, 0, 0, 0.7) 78%, rgba(0, 0, 0, 0.25) 90%, transparent);
+  mask-image: linear-gradient(90deg, #000 0 64%, rgba(0, 0, 0, 0.7) 78%, rgba(0, 0, 0, 0.25) 90%, transparent);
+  animation: pull 1.15s cubic-bezier(0.2, 0.7, 0.15, 1) var(--d) both;
+}
+.smear i:first-child { margin-top: 0; }
+.smear i:nth-child(1) { --c: var(--paint-pink);   --w: 92%; --x: 2px; --d: 0.15s; height: 8px; }
+.smear i:nth-child(2) { --c: var(--paint-yellow); --w: 100%; --d: 0.22s; height: 6px; }
+.smear i:nth-child(3) { --c: var(--paint-cyan);   --w: 84%; --x: 1px; --d: 0.29s; height: 9px; }
+.smear i:nth-child(4) { --c: var(--ink);          --w: 58%; --x: 4px; --d: 0.36s; height: 3px; }
+.smear i:nth-child(5) { --c: var(--paint-green);  --w: 76%; --d: 0.43s; height: 6px; }
+@keyframes pull {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.artist { margin: 16px 0 0; font-size: 1.125rem; font-weight: 500; }
 .artist a { text-decoration: none; }
 .artist a:hover { text-decoration: underline; }
 .about { margin-top: 24px; max-width: 34em; color: var(--ink-soft); }
@@ -67,8 +112,18 @@ h1 {
 
 /* ---------- edition count ---------- */
 .edition { margin-top: 28px; }
-.ticks { display: grid; grid-template-columns: repeat(25, 1fr); gap: 4px; }
-.ticks span { height: 9px; border-radius: 999px; background: var(--empty); }
+/* one paint drop per copy: empty ones are pressed into the wall, minted
+   ones are glossy beads like the dots in the piece */
+.ticks { display: grid; grid-template-columns: repeat(25, 1fr); gap: 5px 4px; }
+.ticks span {
+  aspect-ratio: 1; border-radius: 50%;
+  background: var(--empty);
+  box-shadow: inset 0 1px 1.5px rgba(38, 38, 43, 0.14);
+}
+.ticks span.on {
+  background: radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.6) 0 14%, transparent 42%), var(--c);
+  box-shadow: inset 0 -1.5px 2px rgba(0, 0, 0, 0.22), 0 1.5px 2px rgba(38, 38, 43, 0.22);
+}
 .count {
   display: flex; justify-content: space-between; gap: 12px;
   margin: 10px 0 0; font-size: 0.9375rem; font-variant-numeric: tabular-nums;
@@ -96,6 +151,7 @@ h1 {
 .qty output { min-width: 3ch; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .blade {
+  position: relative; isolation: isolate; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   width: 100%; min-height: 56px; padding: 12px 20px;
   border: 0; border-radius: 6px;
@@ -108,6 +164,15 @@ h1 {
 .blade:hover:not(:disabled) { transform: translateY(-1px); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.35), 0 6px 16px rgba(38, 38, 43, 0.18); }
 .blade:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35); }
 .blade:disabled { background: var(--empty); color: var(--muted); box-shadow: none; cursor: default; }
+/* paint picked up on the rubber: a band of the paints runs along the blade's
+   edge when you reach for it */
+.blade:not(.ghost)::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; z-index: -1;
+  background: linear-gradient(90deg, var(--paint-pink) 0 22%, var(--paint-yellow) 22% 41%, var(--paint-cyan) 41% 66%, var(--paper) 66% 74%, var(--paint-green) 74%);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 380ms cubic-bezier(0.2, 0.7, 0.15, 1);
+}
+.blade:hover:not(:disabled)::after, .blade:focus-visible::after { transform: scaleX(1); }
 .blade.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); box-shadow: none; }
 .openin { display: grid; gap: 10px; }
 .code { display: grid; gap: 10px; }
@@ -133,7 +198,7 @@ h1 {
   font-size: 0.875rem;
 }
 .details div { min-width: 0; }
-.details dt { color: var(--muted); }
+.details dt { color: var(--muted); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
 .details dd { margin: 0; overflow-wrap: anywhere; }
 
 /* ---------- small screens: artwork first, full width ---------- */
@@ -146,7 +211,8 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .blade { transition: none; }
+  .blade, .blade::after { transition: none; }
+  .smear i { animation: none; }
 }
 
 /* /admin — owner sale switch */
