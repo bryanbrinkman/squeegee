@@ -14,6 +14,28 @@ const ZERO = '0x0000000000000000000000000000000000000000';
 const PAINT = ['#f2668b', '#23c7d9', '#48d9a4', '#f2bf27', '#26262b', '#8a8f98'];
 const ID = BigInt(TOKEN_ID);
 const CODE_KEY = 'mint-code-ok';
+const NO_LIMIT = Number.MAX_SAFE_INTEGER;
+
+// Optional per-wallet limit: if the edition has a transfer hook with a
+// `remaining(wallet)` view (contracts/OnePerWalletHook.sol), the page caps the
+// quantity to it. The contract enforces the limit either way.
+const hooksAbi = [
+  {type: 'function', name: 'paramHooks', inputs: [], outputs: [{type: 'address'}, {type: 'address'}, {type: 'address'}], stateMutability: 'view'},
+] as const;
+const limitAbi = [
+  {type: 'function', name: 'remaining', inputs: [{name: 'wallet', type: 'address'}], outputs: [{type: 'uint256'}], stateMutability: 'view'},
+] as const;
+
+async function readWalletLeft(who: `0x${string}`): Promise<number> {
+  try {
+    const [, , hook] = await publicClient.readContract({address: TOKEN, abi: hooksAbi, functionName: 'paramHooks'});
+    if (hook === ZERO) return NO_LIMIT;
+    const r = await publicClient.readContract({address: hook, abi: limitAbi, functionName: 'remaining', args: [who]});
+    return r > BigInt(NO_LIMIT) ? NO_LIMIT : Number(r);
+  } catch {
+    return NO_LIMIT;
+  }
+}
 
 type Status = {tone: 'info' | 'ok' | 'error'; text: string; tx?: string} | null;
 
@@ -51,6 +73,7 @@ export default function Mint() {
   const [account, setAccount] = useState('');
   const [walletChain, setWalletChain] = useState<number | null>(null);
   const [owned, setOwned] = useState<bigint>(0n);
+  const [walletLeft, setWalletLeft] = useState(NO_LIMIT);
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState<'' | 'confirm' | 'pending'>('');
   const [status, setStatus] = useState<Status>(null);
@@ -75,9 +98,16 @@ export default function Mint() {
     setPaused(Boolean(pz));
     setLoaded(true);
     const who = accountRef.current;
+    // Before a wallet connects, the zero address reads as a fresh wallet: the per-wallet cap.
+    if (!who) setWalletLeft(await readWalletLeft(ZERO));
     if (who) {
-      const bal = await publicClient.readContract({address: TOKEN, abi: tokenAbi, functionName: 'balanceOf', args: [who.toLowerCase() as `0x${string}`, ID]});
+      const addr = who.toLowerCase() as `0x${string}`;
+      const [bal, wl] = await Promise.all([
+        publicClient.readContract({address: TOKEN, abi: tokenAbi, functionName: 'balanceOf', args: [addr, ID]}),
+        readWalletLeft(addr),
+      ]);
       setOwned(bal as bigint);
+      setWalletLeft(wl);
     }
   }, []);
 
@@ -155,6 +185,8 @@ export default function Mint() {
     const onAccounts = (a: string[]) => {
       setAccount(a[0] || '');
       setOwned(0n);
+      setWalletLeft(NO_LIMIT);
+      if (!a[0]) refresh().catch(() => {});
     };
     const onChain = (c: string) => setWalletChain(parseInt(c, 16));
     w.request({method: 'eth_accounts'}).then(onAccounts).catch(() => {});
@@ -182,7 +214,8 @@ export default function Mint() {
   const onSale = HAS_TOKEN && !!sale && sale.configured && isEth;
   const soldOut = onSale && left <= 0;
   const wrongChain = !!account && walletChain !== null && walletChain !== CHAIN_ID;
-  const q = Math.max(1, Math.min(qty, Math.max(1, left)));
+  const maxQty = Math.max(1, Math.min(left, walletLeft));
+  const q = Math.max(1, Math.min(qty, maxQty));
   const totalPrice = sale ? sale.price * BigInt(q) : 0n;
 
   async function connect() {
@@ -247,6 +280,10 @@ export default function Mint() {
       } else if (/SaleTermsChanged|WrongPayment/.test(raw)) {
         await refresh().catch(() => {});
         setStatus({tone: 'error', text: 'The price changed before your mint went through. Nothing was charged. Check the new price and mint again.'});
+      } else if (/AlreadyMinted|0xddefae28/i.test(raw)) {
+        // 0xddefae28 = AlreadyMinted(), from contracts/OnePerWalletHook.sol
+        await refresh().catch(() => {});
+        setStatus({tone: 'error', text: 'This wallet has already minted. It’s one per wallet.'});
       } else if (/insufficient funds/i.test(raw)) {
         setStatus({tone: 'error', text: 'Not enough ETH on ' + CHAIN_NAME + ' to cover ' + eth(totalPrice) + ' plus gas.'});
       } else {
@@ -267,6 +304,7 @@ export default function Mint() {
   else if (paused) action = {label: 'Sale paused', disabled: true};
   else if (!account) action = {label: 'Connect wallet', onClick: connect};
   else if (wrongChain) action = {label: 'Switch to ' + CHAIN_NAME, onClick: changeChain};
+  else if (walletLeft <= 0) action = {label: 'Already minted with this wallet', disabled: true};
   else if (busy === 'confirm') action = {label: 'Confirm in your wallet…', disabled: true};
   else if (busy === 'pending') action = {label: 'Minting…', disabled: true};
   else action = {label: 'Mint ' + copies(q) + ' for ' + eth(totalPrice), onClick: mint};
@@ -274,7 +312,7 @@ export default function Mint() {
   // While the sale is open, the code comes first; no wallet or mint button until it's entered.
   const showCode = onSale && !soldOut && !paused && !unlocked;
   const showOpenIn = !hasWallet && mobile && onSale && !soldOut && !paused && !showCode;
-  const showQty = onSale && !soldOut && !paused && !showOpenIn && !showCode;
+  const showQty = onSale && !soldOut && !paused && !showOpenIn && !showCode && maxQty > 1;
 
   return (
     <main className="page">
@@ -318,7 +356,7 @@ export default function Mint() {
                 −
               </button>
               <output aria-live="polite">{q}</output>
-              <button type="button" onClick={() => setQty(Math.min(left, q + 1))} disabled={q >= left || !!busy} aria-label="One more">
+              <button type="button" onClick={() => setQty(Math.min(maxQty, q + 1))} disabled={q >= maxQty || !!busy} aria-label="One more">
                 +
               </button>
             </div>
