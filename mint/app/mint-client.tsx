@@ -4,7 +4,7 @@ import {createWalletClient, custom, formatEther} from 'viem';
 import {readSaleConfig1155, type SaleConfig1155} from '@artblocks/abx-sdk';
 import {chain} from '../lib/chain';
 import {CHAIN_ID, CHAIN_NAME, EXPLORER, HAS_TOKEN, MINTER, TOKEN, TOKEN_ID} from '../lib/config';
-import {ARTIST, ARTIST_URL, DESCRIPTION, DETAILS, EDITION_SIZE, MINT_CODE, TITLE} from '../lib/content';
+import {ARTIST, ARTIST_URL, DESCRIPTION, DETAILS, EDITION_SIZE, MAX_PER_WALLET, MINT_CODE, TITLE} from '../lib/content';
 import {minterAbi, tokenAbi} from '../lib/abi';
 import {publicClient, readArtwork, type Live} from '../lib/meta';
 import {getEthereum, isMobile, switchChain, walletLinks} from '../lib/wallet';
@@ -214,7 +214,11 @@ export default function Mint() {
   const onSale = HAS_TOKEN && !!sale && sale.configured && isEth;
   const soldOut = onSale && left <= 0;
   const wrongChain = !!account && walletChain !== null && walletChain !== CHAIN_ID;
-  const maxQty = Math.max(1, Math.min(left, walletLeft));
+  // The page's own per-wallet cap counts copies the wallet holds; the hook's
+  // (if one is set) counts copies it has ever minted. The stricter one wins.
+  const pageLeft = MAX_PER_WALLET > 0 ? Math.max(0, MAX_PER_WALLET - Number(owned)) : NO_LIMIT;
+  const walletCap = Math.min(walletLeft, pageLeft);
+  const maxQty = Math.max(1, Math.min(left, walletCap));
   const q = Math.max(1, Math.min(qty, maxQty));
   const totalPrice = sale ? sale.price * BigInt(q) : 0n;
 
@@ -304,7 +308,7 @@ export default function Mint() {
   else if (paused) action = {label: 'Sale paused', disabled: true};
   else if (!account) action = {label: 'Connect wallet', onClick: connect};
   else if (wrongChain) action = {label: 'Switch to ' + CHAIN_NAME, onClick: changeChain};
-  else if (walletLeft <= 0) action = {label: 'Already minted with this wallet', disabled: true};
+  else if (walletCap <= 0) action = {label: 'Already minted with this wallet', disabled: true};
   else if (busy === 'confirm') action = {label: 'Confirm in your wallet…', disabled: true};
   else if (busy === 'pending') action = {label: 'Minting…', disabled: true};
   else action = {label: 'Mint ' + copies(q) + ' for ' + eth(totalPrice), onClick: mint};
