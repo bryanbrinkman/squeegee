@@ -3,7 +3,7 @@ import {useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, t
 import {createWalletClient, custom, formatEther} from 'viem';
 import {readSaleConfig1155, type SaleConfig1155} from '@artblocks/abx-sdk';
 import {chain} from '../lib/chain';
-import {CHAIN_ID, CHAIN_NAME, EXPLORER, HAS_TOKEN, MINTER, TOKEN, TOKEN_ID} from '../lib/config';
+import {BASE_PATH, CHAIN_ID, CHAIN_NAME, EXPLORER, HAS_TOKEN, MINTER, TOKEN, TOKEN_ID} from '../lib/config';
 import {ARTIST, ARTIST_URL, DESCRIPTION, DETAILS, EDITION_SIZE, MAX_PER_WALLET, MINT_CODE, TITLE} from '../lib/content';
 import {minterAbi, tokenAbi} from '../lib/abi';
 import {publicClient, readArtwork, type Live} from '../lib/meta';
@@ -325,6 +325,11 @@ export default function Mint() {
       <section className="stage">
         <Artwork mode={artMode} live={live} />
         <p className="hint">Tap for a new painting. Double-tap to open the customize menu.</p>
+        <p className="source">
+          <a href={BASE_PATH + '/preview/paint-smear.abx.js'} target="_blank" rel="noreferrer">
+            View source code
+          </a>
+        </p>
       </section>
 
       <section className="panel">
