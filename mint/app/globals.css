@@ -63,6 +63,9 @@ a:hover { text-decoration-thickness: 2px; }
 /* the piece hangs a few millimetres off the wall */
 .art { box-shadow: 0 18px 34px -8px rgba(38, 38, 43, 0.22), 0 2px 5px rgba(38, 38, 43, 0.08); }
 .hint { margin: 14px 0 0; font-size: 0.8125rem; font-style: italic; color: var(--muted); text-align: center; }
+.source { margin: 6px 0 0; font-size: 0.8125rem; text-align: center; }
+.source a { color: var(--muted); text-underline-offset: 3px; }
+.source a:hover { color: inherit; }
 
 /* ---------- words ---------- */
 h1 {

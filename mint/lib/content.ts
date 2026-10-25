@@ -6,7 +6,7 @@ export const EDITION_SIZE = 100; // shown until the contract's own cap loads
 
 // Code collectors enter before the mint button appears. Page-only: it ships in
 // the site's JavaScript and the contract doesn't check it. Empty = no code.
-export const MINT_CODE = '79843';
+export const MINT_CODE: string = '';
 // Copies one wallet may mint through this page. Page-only, like the code: the
 // contract doesn't check it. 0 = no limit.
 export const MAX_PER_WALLET = 1;
