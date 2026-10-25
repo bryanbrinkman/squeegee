@@ -326,6 +326,10 @@ export default function Mint() {
         <Artwork mode={artMode} live={live} />
         <p className="hint">Tap for a new painting. Double-tap to open the customize menu.</p>
         <p className="source">
+          <a href={BASE_PATH + '/preview/'} target="_blank" rel="noreferrer">
+            View full screen
+          </a>
+          <span aria-hidden="true"> · </span>
           <a href={BASE_PATH + '/preview/paint-smear.abx.js'} target="_blank" rel="noreferrer">
             View source code
           </a>
